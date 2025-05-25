@@ -1,0 +1,52 @@
+version: '3'
+services:
+  guacamole:
+    image: guacamole/guacamole:1.5.5
+    container_name: guacamole
+    environment:
+      GUACD_HOSTNAME: guacd
+      MYSQL_HOSTNAME: mysql
+      MYSQL_DATABASE: guacamole_db
+      MYSQL_USER: guacamole_user
+      MYSQL_PASSWORD: guac_pass
+    ports:
+      - 8080:8080
+    depends_on:
+      - guacd
+      - mysql
+    restart: unless-stopped
+    
+  guacd:
+    image: guacamole/guacd:1.5.5
+    container_name: guacd
+    restart: unless-stopped
+    
+  mysql:
+    image: mysql:5.7
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root_pass
+      MYSQL_DATABASE: guacamole_db
+      MYSQL_USER: guacamole_user
+      MYSQL_PASSWORD: guac_pass
+    volumes:
+      - mysql_data:/var/lib/mysql
+    restart: unless-stopped
+    
+  init-db:
+    image: guacamole/guacamole:1.5.5
+    container_name: init-db
+    environment:
+      MYSQL_HOSTNAME: mysql
+      MYSQL_DATABASE: guacamole_db
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root_pass
+    depends_on:
+      - mysql
+    command: ["/opt/guacamole/bin/initdb.sh", "--mysql"]
+    volumes:
+      - ./init:/init
+    restart: "no"
+      
+volumes:
+  mysql_data:
